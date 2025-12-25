@@ -129,7 +129,33 @@ class DataLoader:
                         time.sleep(2)
             
             if df.empty:
-                logger.warning(f"Aucune donnée trouvée pour {symbol} après {max_retries} tentatives
+                logger.warning(f"Aucune donnée trouvée pour {symbol} après {max_retries} tentatives")
+                return []
+            
+            # Sauvegarde en base de données
+            records = []
+            for index, row in df.iterrows():
+                crypto_data = models.CryptoData(
+                    symbol=symbol,
+                    timestamp=index.to_pydatetime(),
+                    open=float(row['Open']),
+                    high=float(row['High']),
+                    low=float(row['Low']),
+                    close=float(row['Close']),
+                    volume=float(row['Volume'])
+                )
+                records.append(crypto_data)
+            
+            # Insertion par lot
+            db.bulk_save_objects(records)
+            db.commit()
+            
+            logger.info(f"✓ {len(records)} enregistrements sauvegardés pour {symbol}")
+            return records
+            
+        except Exception as e:
+            logger.error(f"Erreur lors du chargement de {symbol}: {e}")
+            db.rollback()
             raise
     
     async def load_stock_data(
@@ -143,12 +169,31 @@ class DataLoader:
         try:
             logger.info(f"Chargement des données boursières pour {symbol}")
             
-            # Téléchargement des données
-            ticker = yf.Ticker(symbol)
-            df = ticker.history(start=start_date, end=end_date)
+            # Petit délai pour éviter le rate limiting
+            time.sleep(0.5)
+            
+            # Téléchargement des données avec retry
+            max_retries = 3
+            df = pd.DataFrame()
+            
+            for attempt in range(max_retries):
+                try:
+                    ticker = yf.Ticker(symbol)
+                    df = ticker.history(start=start_date, end=end_date, interval='1d')
+                    
+                    if not df.empty:
+                        break
+                    
+                    if attempt < max_retries - 1:
+                        logger.warning(f"Tentative {attempt + 1}/{max_retries} échouée, nouvelle tentative...")
+                        time.sleep(2)
+                except Exception as e:
+                    logger.warning(f"Erreur lors de la tentative {attempt + 1}: {e}")
+                    if attempt < max_retries - 1:
+                        time.sleep(2)
             
             if df.empty:
-                logger.warning(f"Aucune donnée trouvée pour {symbol}")
+                logger.warning(f"Aucune donnée trouvée pour {symbol} après {max_retries} tentatives")
                 return []
             
             # Sauvegarde en base de données
