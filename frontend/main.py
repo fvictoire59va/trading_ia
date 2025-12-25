@@ -220,10 +220,7 @@ def create_stocks_panel():
         # Zone de graphique
         chart_container = ui.column().classes('w-full mt-4')
     
-    # Chargement des symboles disponibles
-    async def load_stock_symbols():
-        try:
-            respoinitial des symboles disponibles
+    # Chargement initial des symboles disponibles
     try:
         response = requests.get(f'{BACKEND_URL}/api/stocks/symbols', timeout=5)
         if response.status_code == 200:
@@ -232,7 +229,10 @@ def create_stocks_panel():
             if symbols:
                 symbol_select.value = symbols[0]
     except Exception as e:
-        ui.notify(f'Impossible de charger les symboles: {e}', type='warning
+        ui.notify(f'Impossible de charger les symboles: {e}', type='warning')
+    
+    # Chargement des données
+    async def load_data():
         if not symbol_select.value:
             ui.notify('Veuillez sélectionner un symbole', type='warning')
             return
@@ -296,7 +296,7 @@ def create_stocks_panel():
     
     load_btn.on_click(load_data)
     show_btn.on_click(show_data)
-    
+
 
 def create_stats_panel():
     """Panel pour les statistiques"""
@@ -306,11 +306,7 @@ def create_stats_panel():
     
     async def load_stats():
         try:
-            response = requests.get(f'{BACKEND_URL}/api/stats')
-            if response.status_code == 200:
-                stats = response.json()
-                
-                stats_container.clear(), timeout=5)
+            response = requests.get(f'{BACKEND_URL}/api/stats', timeout=5)
             if response.status_code == 200:
                 stats = response.json()
                 
@@ -352,7 +348,11 @@ def create_stats_panel():
                         ui.label(f"Symboles: {stats['stocks']['symbols_count']}").classes('text-sm')
                         ui.label(f"Enregistrements: {stats['stocks']['total_records']:,}").classes('text-sm')
     except Exception as e:
-        ui.notify(f'Impossible de charger les statistiques: {e}', type='warning'
+        ui.notify(f'Impossible de charger les statistiques: {e}', type='warning')
+
+
+if __name__ in {"__main__", "__mp_main__"}:
+    ui.run(
         host='0.0.0.0',
         port=8080,
         title='Trading IA',
