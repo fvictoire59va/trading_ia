@@ -5,8 +5,12 @@ from typing import List
 import logging
 from sqlalchemy.orm import Session
 import models
+import time
 
 logger = logging.getLogger(__name__)
+
+# Configuration pour éviter le blocage de Yahoo Finance
+yf.pdr_override()
 
 
 class DataLoader:
@@ -56,12 +60,31 @@ class DataLoader:
         try:
             logger.info(f"Chargement des données crypto pour {symbol}")
             
-            # Téléchargement des données
-            ticker = yf.Ticker(symbol)
-            df = ticker.history(start=start_date, end=end_date)
+            # Petit délai pour éviter le rate limiting
+            time.sleep(0.5)
+            
+            # Téléchargement des données avec retry
+            max_retries = 3
+            df = pd.DataFrame()
+            
+            for attempt in range(max_retries):
+                try:
+                    ticker = yf.Ticker(symbol)
+                    df = ticker.history(start=start_date, end=end_date, interval='1d')
+                    
+                    if not df.empty:
+                        break
+                    
+                    if attempt < max_retries - 1:
+                        logger.warning(f"Tentative {attempt + 1}/{max_retries} échouée, nouvelle tentative...")
+                        time.sleep(2)
+                except Exception as e:
+                    logger.warning(f"Erreur lors de la tentative {attempt + 1}: {e}")
+                    if attempt < max_retries - 1:
+                        time.sleep(2)
             
             if df.empty:
-                logger.warning(f"Aucune donnée trouvée pour {symbol}")
+                logger.warning(f"Aucune donnée trouvée pour {symbol} après {max_retries} tentatives")
                 return []
             
             # Sauvegarde en base de données
@@ -82,12 +105,31 @@ class DataLoader:
             db.bulk_save_objects(records)
             db.commit()
             
-            logger.info(f"✓ {len(records)} enregistrements sauvegardés pour {symbol}")
-            return records
+            loPetit délai pour éviter le rate limiting
+            time.sleep(0.5)
             
-        except Exception as e:
-            logger.error(f"Erreur lors du chargement de {symbol}: {e}")
-            db.rollback()
+            # Téléchargement des données avec retry
+            max_retries = 3
+            df = pd.DataFrame()
+            
+            for attempt in range(max_retries):
+                try:
+                    ticker = yf.Ticker(symbol)
+                    df = ticker.history(start=start_date, end=end_date, interval='1d')
+                    
+                    if not df.empty:
+                        break
+                    
+                    if attempt < max_retries - 1:
+                        logger.warning(f"Tentative {attempt + 1}/{max_retries} échouée, nouvelle tentative...")
+                        time.sleep(2)
+                except Exception as e:
+                    logger.warning(f"Erreur lors de la tentative {attempt + 1}: {e}")
+                    if attempt < max_retries - 1:
+                        time.sleep(2)
+            
+            if df.empty:
+                logger.warning(f"Aucune donnée trouvée pour {symbol} après {max_retries} tentatives
             raise
     
     async def load_stock_data(
