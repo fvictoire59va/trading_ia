@@ -108,17 +108,16 @@ def create_crypto_panel():
         # Zone de graphique
         chart_container = ui.column().classes('w-full mt-4')
     
-    # Chargement des symboles disponibles
-    async def load_crypto_symbols():
-        try:
-            response = requests.get(f'{BACKEND_URL}/api/crypto/symbols')
-            if response.status_code == 200:
-                symbols = response.json()
-                symbol_select.options = symbols
-                if symbols:
-                    symbol_select.value = symbols[0]
-        except Exception as e:
-            ui.notify(f'Erreur: {e}', type='negative')
+    # Chargement initial des symboles disponibles
+    try:
+        response = requests.get(f'{BACKEND_URL}/api/crypto/symbols', timeout=5)
+        if response.status_code == 200:
+            symbols = response.json()
+            symbol_select.options = symbols
+            if symbols:
+                symbol_select.value = symbols[0]
+    except Exception as e:
+        ui.notify(f'Impossible de charger les symboles: {e}', type='warning')
     
     # Chargement des données
     async def load_data():
@@ -185,9 +184,6 @@ def create_crypto_panel():
     
     load_btn.on_click(load_data)
     show_btn.on_click(show_data)
-    
-    # Chargement initial des symboles
-    app.on_startup(load_crypto_symbols)
 
 
 def create_stocks_panel():
@@ -227,17 +223,16 @@ def create_stocks_panel():
     # Chargement des symboles disponibles
     async def load_stock_symbols():
         try:
-            response = requests.get(f'{BACKEND_URL}/api/stocks/symbols')
-            if response.status_code == 200:
-                symbols = response.json()
-                symbol_select.options = symbols
-                if symbols:
-                    symbol_select.value = symbols[0]
-        except Exception as e:
-            ui.notify(f'Erreur: {e}', type='negative')
-    
-    # Chargement des données
-    async def load_data():
+            respoinitial des symboles disponibles
+    try:
+        response = requests.get(f'{BACKEND_URL}/api/stocks/symbols', timeout=5)
+        if response.status_code == 200:
+            symbols = response.json()
+            symbol_select.options = symbols
+            if symbols:
+                symbol_select.value = symbols[0]
+    except Exception as e:
+        ui.notify(f'Impossible de charger les symboles: {e}', type='warning
         if not symbol_select.value:
             ui.notify('Veuillez sélectionner un symbole', type='warning')
             return
@@ -302,9 +297,6 @@ def create_stocks_panel():
     load_btn.on_click(load_data)
     show_btn.on_click(show_data)
     
-    # Chargement initial des symboles
-    app.on_startup(load_stock_symbols)
-
 
 def create_stats_panel():
     """Panel pour les statistiques"""
@@ -315,6 +307,10 @@ def create_stats_panel():
     async def load_stats():
         try:
             response = requests.get(f'{BACKEND_URL}/api/stats')
+            if response.status_code == 200:
+                stats = response.json()
+                
+                stats_container.clear(), timeout=5)
             if response.status_code == 200:
                 stats = response.json()
                 
@@ -337,12 +333,26 @@ def create_stats_panel():
     
     ui.button('Actualiser', icon='refresh', on_click=load_stats).classes('mb-4')
     
-    # Chargement initial
-    app.on_startup(load_stats)
-
-
-if __name__ in {"__main__", "__mp_main__"}:
-    ui.run(
+    # Chargement initial des stats
+    try:
+        response = requests.get(f'{BACKEND_URL}/api/stats', timeout=5)
+        if response.status_code == 200:
+            stats = response.json()
+            with stats_container:
+                with ui.row().classes('w-full gap-4'):
+                    # Stats Crypto
+                    with ui.card().classes('p-4'):
+                        ui.label('Crypto-monnaies').classes('text-lg font-bold')
+                        ui.label(f"Symboles: {stats['crypto']['symbols_count']}").classes('text-sm')
+                        ui.label(f"Enregistrements: {stats['crypto']['total_records']:,}").classes('text-sm')
+                    
+                    # Stats Actions
+                    with ui.card().classes('p-4'):
+                        ui.label('Actions françaises').classes('text-lg font-bold')
+                        ui.label(f"Symboles: {stats['stocks']['symbols_count']}").classes('text-sm')
+                        ui.label(f"Enregistrements: {stats['stocks']['total_records']:,}").classes('text-sm')
+    except Exception as e:
+        ui.notify(f'Impossible de charger les statistiques: {e}', type='warning'
         host='0.0.0.0',
         port=8080,
         title='Trading IA',
