@@ -94,6 +94,8 @@ trading_ia/
 4. Cliquez sur **"Charger les données"**
 5. Cliquez sur **"Afficher les données"** pour voir le graphique
 
+**Note** : Les données crypto utilisent l'API CoinGecko (gratuite et fiable). En cas d'échec, le système bascule automatiquement vers Yahoo Finance.
+
 ### Charger des données d'actions françaises
 
 1. Accédez à l'onglet **"Bourse Française"**
@@ -101,6 +103,8 @@ trading_ia/
 3. Choisissez les dates de début et de fin
 4. Cliquez sur **"Charger les données"**
 5. Cliquez sur **"Afficher les données"** pour voir le graphique
+
+**Note** : Les données boursières utilisent Yahoo Finance. En raison de limitations de l'API gratuite, certaines requêtes peuvent échouer. Essayez avec des périodes plus courtes (30-90 jours) pour de meilleurs résultats.
 
 ### Voir les statistiques
 

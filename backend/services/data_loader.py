@@ -113,33 +113,45 @@ class DataLoader:
             return pd.DataFrame()
     
     async def _load_from_yahoo(self, symbol: str, start_date: str, end_date: str) -> pd.DataFrame:
-        """Charge les données depuis Yahoo Finance avec retry"""
+        """Charge les données depuis Yahoo Finance avec retry et headers optimisés"""
         try:
-            time.sleep(0.5)
+            time.sleep(1)  # Délai plus long pour éviter le rate limiting
             
             max_retries = 3
             df = pd.DataFrame()
             
             for attempt in range(max_retries):
                 try:
+                    # Configuration du ticker avec headers personnalisés
                     ticker = yf.Ticker(symbol)
-                    df = ticker.history(start=start_date, end=end_date, interval='1d')
+                    ticker.session.headers.update({
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'Accept-Language': 'en-US,en;q=0.5',
+                        'Accept-Encoding': 'gzip, deflate',
+                        'DNT': '1',
+                        'Connection': 'keep-alive',
+                        'Upgrade-Insecure-Requests': '1'
+                    })
+                    
+                    df = ticker.history(start=start_date, end=end_date, interval='1d', auto_adjust=True)
                     
                     if not df.empty:
+                        logger.info(f"Yahoo Finance: {len(df)} enregistrements recuperes pour {symbol}")
                         break
                     
                     if attempt < max_retries - 1:
-                        logger.warning(f"Tentative {attempt + 1}/{max_retries} echouee, nouvelle tentative...")
-                        time.sleep(2)
+                        logger.warning(f"Yahoo tentative {attempt + 1}/{max_retries} echouee, nouvelle tentative dans 3s...")
+                        time.sleep(3)
                 except Exception as e:
-                    logger.warning(f"Erreur lors de la tentative {attempt + 1}: {e}")
+                    logger.warning(f"Erreur Yahoo tentative {attempt + 1}: {str(e)[:100]}")
                     if attempt < max_retries - 1:
-                        time.sleep(2)
+                        time.sleep(3)
             
             return df
             
         except Exception as e:
-            logger.error(f"Erreur lors du chargement depuis Yahoo: {e}")
+            logger.error(f"Erreur critique lors du chargement depuis Yahoo: {e}")
             return pd.DataFrame()
     
     async def load_crypto_data(
