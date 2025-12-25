@@ -106,6 +106,11 @@ trading_ia/
 
 **Note** : Les données boursières utilisent Yahoo Finance. En raison de limitations de l'API gratuite, certaines requêtes peuvent échouer. Essayez avec des périodes plus courtes (30-90 jours) pour de meilleurs résultats.
 
+**⚠️ Limitation connue** : Yahoo Finance bloque souvent les requêtes depuis les conteneurs Docker. Si vous rencontrez des échecs répétés pour les actions françaises, voici les alternatives :
+1. **Cryptos** : Fonctionnent parfaitement via CoinGecko
+2. **Actions** : Exécuter le backend en local (hors Docker) pour contourner le blocage
+3. **Alternative** : Utiliser une API premium (Alpha Vantage, IEX Cloud, etc.)
+
 ### Voir les statistiques
 
 Accédez à l'onglet **"Statistiques"** pour voir :

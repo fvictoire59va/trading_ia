@@ -225,6 +225,8 @@ class DataLoader:
             
             if df.empty:
                 logger.warning(f"Aucune donnee trouvee pour {symbol}")
+                logger.warning(f"Yahoo Finance bloque souvent les requetes depuis Docker pour les actions")
+                logger.warning(f"Conseil: Testez avec BTC-USD (CoinGecko) ou executez le backend en local")
                 return []
             
             # Sauvegarde en base de données
