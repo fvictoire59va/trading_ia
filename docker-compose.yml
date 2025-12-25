@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: trading_ia_db
+    environment:
+      POSTGRES_DB: trading_ia
+      POSTGRES_USER: trading_user
+      POSTGRES_PASSWORD: trading_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - trading_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trading_user -d trading_ia"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Python
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: trading_ia_backend
+    environment:
+      DATABASE_URL: postgresql://trading_user:trading_pass@postgres:5432/trading_ia
+      PYTHONUNBUFFERED: 1
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - trading_network
+    restart: unless-stopped
+
+  # Frontend NiceGUI
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: trading_ia_frontend
+    environment:
+      BACKEND_URL: http://backend:8000
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - backend
+    networks:
+      - trading_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  trading_network:
+    driver: bridge
