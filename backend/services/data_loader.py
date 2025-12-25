@@ -120,20 +120,22 @@ class DataLoader:
             max_retries = 3
             df = pd.DataFrame()
             
+            # Créer une session avec headers personnalisés
+            session = requests.Session()
+            session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1'
+            })
+            
             for attempt in range(max_retries):
                 try:
-                    # Configuration du ticker avec headers personnalisés
-                    ticker = yf.Ticker(symbol)
-                    ticker.session.headers.update({
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                        'Accept-Language': 'en-US,en;q=0.5',
-                        'Accept-Encoding': 'gzip, deflate',
-                        'DNT': '1',
-                        'Connection': 'keep-alive',
-                        'Upgrade-Insecure-Requests': '1'
-                    })
-                    
+                    # Utiliser la session personnalisée
+                    ticker = yf.Ticker(symbol, session=session)
                     df = ticker.history(start=start_date, end=end_date, interval='1d', auto_adjust=True)
                     
                     if not df.empty:
