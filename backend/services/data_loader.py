@@ -9,9 +9,6 @@ import time
 
 logger = logging.getLogger(__name__)
 
-# Configuration pour éviter le blocage de Yahoo Finance
-yf.pdr_override()
-
 
 class DataLoader:
     """Service pour charger les données historiques crypto et actions"""
@@ -76,7 +73,7 @@ class DataLoader:
                         break
                     
                     if attempt < max_retries - 1:
-                        logger.warning(f"Tentative {attempt + 1}/{max_retries} échouée, nouvelle tentative...")
+                        logger.warning(f"Tentative {attempt + 1}/{max_retries} echouee, nouvelle tentative...")
                         time.sleep(2)
                 except Exception as e:
                     logger.warning(f"Erreur lors de la tentative {attempt + 1}: {e}")
@@ -84,7 +81,7 @@ class DataLoader:
                         time.sleep(2)
             
             if df.empty:
-                logger.warning(f"Aucune donnée trouvée pour {symbol} après {max_retries} tentatives")
+                logger.warning(f"Aucune donnee trouvee pour {symbol} apres {max_retries} tentatives")
                 return []
             
             # Sauvegarde en base de données
@@ -105,52 +102,7 @@ class DataLoader:
             db.bulk_save_objects(records)
             db.commit()
             
-            loPetit délai pour éviter le rate limiting
-            time.sleep(0.5)
-            
-            # Téléchargement des données avec retry
-            max_retries = 3
-            df = pd.DataFrame()
-            
-            for attempt in range(max_retries):
-                try:
-                    ticker = yf.Ticker(symbol)
-                    df = ticker.history(start=start_date, end=end_date, interval='1d')
-                    
-                    if not df.empty:
-                        break
-                    
-                    if attempt < max_retries - 1:
-                        logger.warning(f"Tentative {attempt + 1}/{max_retries} échouée, nouvelle tentative...")
-                        time.sleep(2)
-                except Exception as e:
-                    logger.warning(f"Erreur lors de la tentative {attempt + 1}: {e}")
-                    if attempt < max_retries - 1:
-                        time.sleep(2)
-            
-            if df.empty:
-                logger.warning(f"Aucune donnée trouvée pour {symbol} après {max_retries} tentatives")
-                return []
-            
-            # Sauvegarde en base de données
-            records = []
-            for index, row in df.iterrows():
-                crypto_data = models.CryptoData(
-                    symbol=symbol,
-                    timestamp=index.to_pydatetime(),
-                    open=float(row['Open']),
-                    high=float(row['High']),
-                    low=float(row['Low']),
-                    close=float(row['Close']),
-                    volume=float(row['Volume'])
-                )
-                records.append(crypto_data)
-            
-            # Insertion par lot
-            db.bulk_save_objects(records)
-            db.commit()
-            
-            logger.info(f"✓ {len(records)} enregistrements sauvegardés pour {symbol}")
+            logger.info(f"OK {len(records)} enregistrements sauvegardes pour {symbol}")
             return records
             
         except Exception as e:
@@ -167,7 +119,7 @@ class DataLoader:
     ) -> List[models.StockData]:
         """Charge les données historiques d'une action française via Yahoo Finance"""
         try:
-            logger.info(f"Chargement des données boursières pour {symbol}")
+            logger.info(f"Chargement des donnees boursieres pour {symbol}")
             
             # Petit délai pour éviter le rate limiting
             time.sleep(0.5)
@@ -185,7 +137,7 @@ class DataLoader:
                         break
                     
                     if attempt < max_retries - 1:
-                        logger.warning(f"Tentative {attempt + 1}/{max_retries} échouée, nouvelle tentative...")
+                        logger.warning(f"Tentative {attempt + 1}/{max_retries} echouee, nouvelle tentative...")
                         time.sleep(2)
                 except Exception as e:
                     logger.warning(f"Erreur lors de la tentative {attempt + 1}: {e}")
@@ -193,7 +145,7 @@ class DataLoader:
                         time.sleep(2)
             
             if df.empty:
-                logger.warning(f"Aucune donnée trouvée pour {symbol} après {max_retries} tentatives")
+                logger.warning(f"Aucune donnee trouvee pour {symbol} apres {max_retries} tentatives")
                 return []
             
             # Sauvegarde en base de données
@@ -214,7 +166,7 @@ class DataLoader:
             db.bulk_save_objects(records)
             db.commit()
             
-            logger.info(f"✓ {len(records)} enregistrements sauvegardés pour {symbol}")
+            logger.info(f"OK {len(records)} enregistrements sauvegardes pour {symbol}")
             return records
             
         except Exception as e:
